@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>王者种菜计算器(修正版)</title>
+    <style>
+        body { font-family: -apple-system, sans-serif; background-color: #f4f7f9; color: #333; max-width: 500px; margin: 0 auto; padding: 15px; }
+        .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .tabs { display: flex; background: #eee; border-radius: 8px; padding: 4px; margin-bottom: 20px; }
+        .tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; border-radius: 6px; font-size: 14px; transition: 0.2s; }
+        .tab.active { background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); font-weight: bold; color: #3498db; }
+        .content { display: none; }
+        .content.active { display: block; }
+        .form-group { margin-bottom: 12px; }
+        label { display: block; margin-bottom: 5px; font-size: 13px; color: #666; }
+        select, input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 15px; }
+        .row { display: flex; gap: 8px; }
+        button { width: 100%; background: #3498db; color: white; border: none; padding: 14px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        button:active { transform: scale(0.98); }
+        .result { margin-top: 15px; padding: 15px; background: #f0f9ff; border-radius: 10px; border-left: 5px solid #3498db; font-size: 14px; line-height: 1.6; white-space: pre-line; }
+        .time-badge { color: #e67e22; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab(1)">浇水时间表</div>
+            <div class="tab" onclick="switchTab(2)">预测成熟</div>
+        </div>
+
+        <div id="tab1" class="content active">
+            <div class="form-group">
+                <label>作物类型</label>
+                <select id="crop1" onchange="saveData()">
+                    <option value="1">1小时</option>
+                    <option value="8">8小时</option>
+                    <option value="16">16小时</option>
+                    <option value="32">32小时</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>种下时间</label>
+                <input type="time" id="plantTime" onchange="saveData()">
+            </div>
+            <button onclick="calc1()">生成时间表</button>
+            <div id="res1" class="result" style="display:none;"></div>
+        </div>
+
+        <div id="tab2" class="content">
+            <div class="form-group">
+                <label>作物类型</label>
+                <select id="crop2" onchange="saveData()">
+                    <option value="1">1小时</option>
+                    <option value="8">8小时</option>
+                    <option value="16">16小时</option>
+                    <option value="32">32小时</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>当前时间 (自动获取)</label>
+                <input type="time" id="currTime" readonly>
+            </div>
+            <div class="form-group">
+                <label>剩余成熟时间</label>
+                <div class="row">
+                    <input type="number" id="remH" placeholder="时" oninput="saveData()">
+                    <input type="number" id="remM" placeholder="分" oninput="saveData()">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>水分还能维持</label>
+                <div class="row">
+                    <input type="number" id="watH" placeholder="时" oninput="saveData()">
+                    <input type="number" id="watM" placeholder="分" oninput="saveData()">
+                </div>
+            </div>
+            <button onclick="calc2()">开始预测</button>
+            <div id="res2" class="result" style="display:none;"></div>
+        </div>
+    </div>
+
+<script>
+    window.onload = function() {
+        const saved = JSON.parse(localStorage.getItem('farmData') || '{}');
+        if(saved.crop1) document.getElementById('crop1').value = saved.crop1;
+        if(saved.plantTime) document.getElementById('plantTime').value = saved.plantTime;
+        if(saved.crop2) document.getElementById('crop2').value = saved.crop2;
+        if(saved.remH) document.getElementById('remH').value = saved.remH;
+        if(saved.remM) document.getElementById('remM').value = saved.remM;
+        if(saved.watH) document.getElementById('watH').value = saved.watH;
+        if(saved.watM) document.getElementById('watM').value = saved.watM;
+        if(saved.res1) { document.getElementById('res1').innerHTML = saved.res1; document.getElementById('res1').style.display = 'block'; }
+        if(saved.res2) { document.getElementById('res2').innerHTML = saved.res2; document.getElementById('res2').style.display = 'block'; }
+        updateCurrTime();
+    };
+
+    function saveData() {
+        const data = {
+            crop1: document.getElementById('crop1').value,
+            plantTime: document.getElementById('plantTime').value,
+            crop2: document.getElementById('crop2').value,
+            remH: document.getElementById('remH').value,
+            remM: document.getElementById('remM').value,
+            watH: document.getElementById('watH').value,
+            watM: document.getElementById('watM').value,
+            res1: document.getElementById('res1').innerHTML,
+            res2: document.getElementById('res2').innerHTML
+        };
+        localStorage.setItem('farmData', JSON.stringify(data));
+    }
+
+    function switchTab(n) {
+        document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === n-1));
+        document.querySelectorAll('.content').forEach((c, i) => c.classList.toggle('active', i === n-1));
+        if(n === 2) updateCurrTime();
+    }
+
+    function updateCurrTime() {
+        const now = new Date();
+        document.getElementById('currTime').value = now.toTimeString().slice(0,5);
+    }
+
+    function addMins(t, m) {
+        let [h, min] = t.split(':').map(Number);
+        let d = new Date(2000,0,1,h,Math.round(min + m));
+        return d.toTimeString().slice(0,5);
+    }
+
+    function formatM(m) { return Math.round(m) + "分钟"; }
+
+    // 功能一
+    function calc1() {
+        let baseMins = document.getElementById('crop1').value * 60;
+        let pTime = document.getElementById('plantTime').value;
+        if(!pTime) return alert("请选择种下时间");
+        
+        let maxMoisture = baseMins / 3;
+        let minWait = maxMoisture / 10; // 水分流失超过1/10才能浇水
+        let rem = baseMins;
+        let cur = pTime;
+        let log = `<b>浇水排班表：</b>\n`;
+        
+        // 第一次种下直接浇透
+        rem -= (maxMoisture/4);
+        log += `1. 初始浇水：${cur} (减免 ${maxMoisture/4}分)\n`;
+        
+        let i = 2;
+        while(rem > 0.5) {
+            if(rem > 1.25 * maxMoisture) {
+                cur = addMins(cur, maxMoisture);
+                rem -= 1.25 * maxMoisture;
+                log += `${i}. 再次浇水：${cur} (等待${formatM(maxMoisture)}，减免${maxMoisture/4}分)\n`;
+            } else {
+                let idealW = rem / 1.25;
+                if(idealW >= minWait) {
+                    cur = addMins(cur, idealW);
+                    log += `🏁 最终成熟：<span class="time-badge">${cur}</span> (等待${formatM(idealW)}，浇水后刚好成熟)\n`;
+                } else {
+                    // 卡在了1/10冷却期内的边界情况
+                    let finalWait = Math.min(rem, minWait);
+                    cur = addMins(cur, finalWait);
+                    if(rem <= minWait) {
+                        log += `🏁 最终成熟：<span class="time-badge">${cur}</span> (等待${formatM(finalWait)}自然成熟，流失未达下限无需浇水)\n`;
+                    } else {
+                        log += `🏁 最终成熟：<span class="time-badge">${cur}</span> (死等${formatM(finalWait)}触发1/10流失下限，浇水瞬间成熟)\n`;
+                    }
+                }
+                break;
+            }
+            i++;
+        }
+        document.getElementById('res1').innerHTML = log;
+        document.getElementById('res1').style.display = 'block';
+        saveData();
+    }
+
+    // 功能二
+    function calc2() {
+        updateCurrTime();
+        let baseMins = document.getElementById('crop2').value * 60;
+        let remTotal = (Number(document.getElementById('remH').value)||0)*60 + (Number(document.getElementById('remM').value)||0);
+        let watLeft = (Number(document.getElementById('watH').value)||0)*60 + (Number(document.getElementById('watM').value)||0);
+        
+        let maxM = baseMins / 3;
+        let minWait = maxM / 10;
+        let lost = maxM - watLeft;
+        
+        // 核心修正逻辑：
+        let idealW = (remTotal - lost / 4) / 1.25;
+        let realWait;
+        let canWaterNow = lost >= minWait;
+        let immReduct = canWaterNow ? (lost / 4) : 0;
+
+        if (idealW >= minWait - lost) {
+            realWait = idealW;
+        } else {
+            // 要么自然成熟，要么死等冷却结束浇水成熟，取更快的那个
+            realWait = Math.min(remTotal, minWait - lost);
+        }
+        
+        let final = addMins(document.getElementById('currTime').value, realWait);
+        let log = `<b>预测结果：</b>\n`;
+        
+        if(canWaterNow) {
+            log += `✅ 当前流失已超1/10，立刻浇水可减免：${Math.round(immReduct)} 分钟\n`;
+        } else {
+            log += `⚠️ 当前水分流失未达1/10，无法立即浇水\n`;
+        }
+        
+        log += `后续需现实等待：${Math.round(realWait)} 分钟\n`;
+        log += `最快成熟时刻：<span class="time-badge">${final}</span>`;
+        
+        document.getElementById('res2').innerHTML = log;
+        document.getElementById('res2').style.display = 'block';
+        saveData();
+    }
+</script>
+</body>
+</html>
