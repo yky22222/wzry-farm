@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>王者种菜计算器(深度自选版)</title>
+    <title>王者种菜计算器</title>
     <style>
         body { font-family: -apple-system, sans-serif; background-color: #f4f7f9; color: #333; max-width: 500px; margin: 0 auto; padding: 15px; }
         .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin-bottom: 20px; }
@@ -23,7 +23,7 @@
         /* 升级界面专用样式 */
         .upgrade-grid { display: flex; gap: 15px; margin-bottom: 20px; }
         .grid-col { flex: 1; background: #fcfcfc; padding: 12px; border-radius: 10px; border: 1px solid #eee; }
-        .grid-title { font-size: 14px; font-weight: bold; color: #34495e; margin-bottom: 15px; text-align: center; border-bottom: 2px solid #3498db; padding-bottom: 5px; display: inline-block; margin-left: auto; margin-right: auto; display: block; width: fit-content; }
+        .grid-title { font-size: 14px; font-weight: bold; color: #34495e; margin-bottom: 15px; text-align: center; border-bottom: 2px solid #3498db; padding-bottom: 5px; display: inline-block; margin-left: auto; margin-right: auto; width: fit-content; }
         .input-mini { text-align: center; font-weight: bold; color: #d35400; background: #fdf2e9; border: 1px solid #e67e22; }
         .select-mini { background: #f0f8ff; border: 1px solid #3498db; color: #2c3e50; font-weight: bold; }
         
@@ -95,7 +95,6 @@
         </div>
 
         <div id="tab3" class="content">
-            
             <div class="upgrade-grid">
                 <div class="grid-col">
                     <div class="grid-title">当前状况</div>
@@ -170,7 +169,7 @@
     </div>
 
 <script>
-    // 【解绑数据源】
+    // --- 数据库 ---
     const baseLvlData = {
         2: { xp: 5, coin: 12 }, 3: { xp: 36, coin: 50 }, 4: { xp: 60, coin: 100 }, 5: { xp: 100, coin: 150 }, 6: { xp: 360, coin: 480 },
         7: { xp: 720, coin: 2100 }, 8: { xp: 1100, coin: 5000 }, 9: { xp: 2200, coin: 13000 }, 10: { xp: 3500, coin: 25000 },
@@ -200,7 +199,6 @@
         18: { coin: 3196000, xp: 59000 }, 19: { coin: 0, xp: 0 }
     };
 
-    // 【算法：推导等级对应的极限上限】
     function getMaxLand(lv) { return lv < 2 ? 3 : Math.min(23, Math.floor(lv / 2) + 3); }
     function getMaxStall(lv) {
         if (lv < 5) return 0;
@@ -209,7 +207,7 @@
         return Math.min(19, Math.floor((lv - 1) / 2));
     }
 
-    // --- 以下为原功能一、二的通用基础逻辑 ---
+    // --- 基础运转逻辑 ---
     window.onload = function() {
         const saved = JSON.parse(localStorage.getItem('farmData') || '{}');
         ['crop1','plantTime','crop2','remH','remM','watH','watM','currLvl','targetLvl','currStall','currLand'].forEach(id => {
@@ -219,8 +217,6 @@
         if(saved.res2) { document.getElementById('res2').innerHTML = saved.res2; document.getElementById('res2').style.display = 'block'; }
         
         updateCurrTime();
-        
-        // 专门为目标下拉框做的缓存恢复
         triggerLogicUpdate(saved.targetStall, saved.targetLand);
     };
 
@@ -240,17 +236,81 @@
         document.querySelectorAll('.content').forEach((c, i) => c.classList.toggle('active', i === n-1));
         if(n === 2) updateCurrTime();
     }
+    
     function updateCurrTime() { document.getElementById('currTime').value = new Date().toTimeString().slice(0,5); }
     function addMins(t, m) { let [h, min] = t.split(':').map(Number); return new Date(2000,0,1,h,Math.round(min + m)).toTimeString().slice(0,5); }
     function formatM(m) { return Math.round(m) + "分钟"; }
     function formatNum(num) { return num >= 10000 ? parseFloat((num / 10000).toFixed(2)) + 'w' : num; }
 
-    function calc1() { /* 保持原逻辑不变 */ }
-    function calc2() { /* 保持原逻辑不变 */ }
+    // --- 功能一：浇水排班计算逻辑 ---
+    function calc1() {
+        let baseMins = document.getElementById('crop1').value * 60;
+        let pTime = document.getElementById('plantTime').value;
+        if(!pTime) return alert("请选择种下时间");
+        let maxMoisture = baseMins / 3;
+        let minWait = maxMoisture / 10;
+        let rem = baseMins;
+        let cur = pTime;
+        let log = `<b>浇水排班表：</b>\n`;
+        rem -= (maxMoisture/4);
+        log += `1. 初始浇水：${cur} (减免 ${maxMoisture/4}分)\n`;
+        let i = 2;
+        while(rem > 0.5) {
+            if(rem > 1.25 * maxMoisture) {
+                cur = addMins(cur, maxMoisture);
+                rem -= 1.25 * maxMoisture;
+                log += `${i}. 再次浇水：${cur} (等待${formatM(maxMoisture)}，减免${maxMoisture/4}分)\n`;
+            } else {
+                let idealW = rem / 1.25;
+                if(idealW >= minWait) {
+                    cur = addMins(cur, idealW);
+                    log += `🏁 最终成熟：<span class="time-badge">${cur}</span> (等待${formatM(idealW)}，浇水后刚好成熟)\n`;
+                } else {
+                    let finalWait = Math.min(rem, minWait);
+                    cur = addMins(cur, finalWait);
+                    if(rem <= minWait) {
+                        log += `🏁 最终成熟：<span class="time-badge">${cur}</span> (等待${formatM(finalWait)}自然成熟，流失未达下限无需浇水)\n`;
+                    } else {
+                        log += `🏁 最终成熟：<span class="time-badge">${cur}</span> (死等${formatM(finalWait)}触发1/10流失下限，浇水瞬间成熟)\n`;
+                    }
+                }
+                break;
+            }
+            i++;
+        }
+        document.getElementById('res1').innerHTML = log;
+        document.getElementById('res1').style.display = 'block';
+        saveData();
+    }
 
-    // 【全新功能三逻辑控制中心】
+    // --- 功能二：成熟预测计算逻辑 ---
+    function calc2() {
+        updateCurrTime();
+        let baseMins = document.getElementById('crop2').value * 60;
+        let remTotal = (Number(document.getElementById('remH').value)||0)*60 + (Number(document.getElementById('remM').value)||0);
+        let watLeft = (Number(document.getElementById('watH').value)||0)*60 + (Number(document.getElementById('watM').value)||0);
+        let maxM = baseMins / 3;
+        let minWait = maxM / 10;
+        let lost = maxM - watLeft;
+        let idealW = (remTotal - lost / 4) / 1.25;
+        let realWait;
+        let canWaterNow = lost >= minWait;
+        let immReduct = canWaterNow ? (lost / 4) : 0;
+        if (idealW >= minWait - lost) { realWait = idealW; } 
+        else { realWait = Math.min(remTotal, minWait - lost); }
+        let final = addMins(document.getElementById('currTime').value, realWait);
+        let log = `<b>预测结果：</b>\n`;
+        if(canWaterNow) { log += `✅ 当前流失已超1/10，立刻浇水可减免：${Math.round(immReduct)} 分钟\n`; } 
+        else { log += `⚠️ 当前水分流失未达1/10，无法立即浇水\n`; }
+        log += `后续需现实等待：${Math.round(realWait)} 分钟\n`;
+        log += `最快成熟时刻：<span class="time-badge">${final}</span>`;
+        document.getElementById('res2').innerHTML = log;
+        document.getElementById('res2').style.display = 'block';
+        saveData();
+    }
+
+    // --- 功能三：升级逻辑控制 ---
     function triggerLogicUpdate(savedTargetStall, savedTargetLand) {
-        // 1. 获取并规范化用户的输入，防止乱填
         let cLvl = Math.max(1, Math.min(40, parseInt(document.getElementById('currLvl').value) || 1));
         let tLvl = Math.max(cLvl, Math.min(40, parseInt(document.getElementById('targetLvl').value) || 2));
         
@@ -260,29 +320,22 @@
         let maxCLand = getMaxLand(cLvl);
         let cLand = Math.max(3, Math.min(maxCLand, parseInt(document.getElementById('currLand').value) || 3));
 
-        // 写回规范后的值
         document.getElementById('currLvl').value = cLvl;
         document.getElementById('targetLvl').value = tLvl;
         document.getElementById('currStall').value = cStall;
         document.getElementById('currLand').value = cLand;
 
-        // 2. 动态生成右侧的“目标”下拉菜单
         let maxTStall = getMaxStall(tLvl);
         let maxTLand = getMaxLand(tLvl);
 
-        let stallHTML = `<option value="auto">Auto (随等级拉满至${maxTStall})</option>`;
-        for(let i = cStall; i <= maxTStall; i++) {
-            stallHTML += `<option value="${i}">升至 ${i} 级${i===cStall?' (不升)':''}</option>`;
-        }
+        let stallHTML = `<option value="auto">Auto (随等级升至${maxTStall})</option>`;
+        for(let i = cStall; i <= maxTStall; i++) { stallHTML += `<option value="${i}">升至 ${i} 级${i===cStall?' (不升)':''}</option>`; }
         document.getElementById('targetStall').innerHTML = stallHTML;
 
-        let landHTML = `<option value="auto">Auto (随等级拉满至${maxTLand})</option>`;
-        for(let i = cLand; i <= maxTLand; i++) {
-            landHTML += `<option value="${i}">开至 ${i} 块${i===cLand?' (不开)':''}</option>`;
-        }
+        let landHTML = `<option value="auto">Auto (随等级开至${maxTLand})</option>`;
+        for(let i = cLand; i <= maxTLand; i++) { landHTML += `<option value="${i}">开至 ${i} 块${i===cLand?' (不开)':''}</option>`; }
         document.getElementById('targetLand').innerHTML = landHTML;
 
-        // 恢复缓存的选择（如果有）
         if (savedTargetStall) document.getElementById('targetStall').value = savedTargetStall;
         if (savedTargetLand) document.getElementById('targetLand').value = savedTargetLand;
 
@@ -290,14 +343,13 @@
     }
 
     function calcUpgrade() {
-        saveData(); // 任何操作先存档
+        saveData(); 
 
         let cLvl = parseInt(document.getElementById('currLvl').value);
         let tLvl = parseInt(document.getElementById('targetLvl').value);
         let cStall = parseInt(document.getElementById('currStall').value);
         let cLand = parseInt(document.getElementById('currLand').value);
 
-        // 解析下拉框的真实目标值
         let selStall = document.getElementById('targetStall').value;
         let tStall = selStall === 'auto' ? getMaxStall(tLvl) : parseInt(selStall);
 
@@ -306,28 +358,24 @@
 
         let s_reqXp = 0, s_baseCoin = 0, s_stallCoin = 0, s_stallXp = 0, s_landCoin = 0, s_landXp = 0;
 
-        // 累计农场本体花费
         for(let i = cLvl + 1; i <= tLvl; i++) {
             let d = baseLvlData[i] || { xp: 0, coin: 0 };
             s_reqXp += d.xp;
             s_baseCoin += d.coin;
         }
 
-        // 累计小摊花费
         for(let i = cStall + 1; i <= tStall; i++) {
             let d = stallData[i] || { xp: 0, coin: 0 };
             s_stallXp += d.xp;
             s_stallCoin += d.coin;
         }
 
-        // 累计地块花费
         for(let i = cLand + 1; i <= tLand; i++) {
             let d = landData[i] || { xp: 0, coin: 0 };
             s_landXp += d.xp;
             s_landCoin += d.coin;
         }
 
-        // 渲染更新界面
         document.getElementById('upgReqXp').innerText = formatNum(s_reqXp);
         document.getElementById('upgBaseCoin').innerText = formatNum(s_baseCoin);
         document.getElementById('upgStallCoin').innerText = formatNum(s_stallCoin);
