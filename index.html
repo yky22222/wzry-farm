@@ -3,30 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>王者种菜计算器</title>
+    <title>王者种菜计算器(全能终极版)</title>
     <style>
         body { font-family: -apple-system, sans-serif; background-color: #f4f7f9; color: #333; max-width: 500px; margin: 0 auto; padding: 15px; }
-        .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .tabs { display: flex; background: #eee; border-radius: 8px; padding: 4px; margin-bottom: 20px; }
-        .tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; border-radius: 6px; font-size: 14px; transition: 0.2s; }
+        .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        
+        /* 账号管理栏 */
+        .account-bar { display: flex; align-items: center; gap: 8px; background: #fff; padding: 12px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid #e1e8ed; }
+        .account-select { flex: 1; padding: 8px; border: 1px solid #3498db; border-radius: 6px; font-weight: bold; color: #2c3e50; font-size: 15px; background: #f0f8ff; }
+        .acc-btn { padding: 8px 12px; border: none; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; color: #fff; }
+        .btn-add { background: #2ecc71; }
+        .btn-del { background: #e74c3c; }
+        .data-tools { display: flex; gap: 10px; margin-bottom: 20px; }
+        .btn-data { flex: 1; padding: 10px; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; color: #fff; background: #34495e; }
+
+        /* 顶部导航 Tabs (支持横向滑动) */
+        .tabs { display: flex; background: #eee; border-radius: 8px; padding: 4px; margin-bottom: 20px; overflow-x: auto; white-space: nowrap; }
+        .tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; border-radius: 6px; font-size: 14px; transition: 0.2s; min-width: 70px; }
         .tab.active { background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); font-weight: bold; color: #3498db; }
         .content { display: none; }
         .content.active { display: block; }
+        
+        /* 表单通用 */
         .form-group { margin-bottom: 12px; }
         label { display: block; margin-bottom: 5px; font-size: 13px; color: #666; }
         select, input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
-        button { width: 100%; background: #3498db; color: white; border: none; padding: 14px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        button:active { transform: scale(0.98); }
+        .main-btn { width: 100%; background: #3498db; color: white; border: none; padding: 14px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .main-btn:active { transform: scale(0.98); }
         .result { margin-top: 15px; padding: 15px; background: #f0f9ff; border-radius: 10px; border-left: 5px solid #3498db; font-size: 14px; line-height: 1.6; white-space: pre-line; }
         .time-badge { color: #e67e22; font-weight: bold; }
         
-        /* 升级界面专用样式 */
-        .upgrade-grid { display: flex; gap: 15px; margin-bottom: 20px; }
+        /* 升级模块专用 */
+        .upgrade-grid { display: flex; gap: 10px; margin-bottom: 20px; }
         .grid-col { flex: 1; background: #fcfcfc; padding: 12px; border-radius: 10px; border: 1px solid #eee; }
         .grid-title { font-size: 14px; font-weight: bold; color: #34495e; margin-bottom: 15px; text-align: center; border-bottom: 2px solid #3498db; padding-bottom: 5px; display: inline-block; margin-left: auto; margin-right: auto; width: fit-content; }
         .input-mini { text-align: center; font-weight: bold; color: #d35400; background: #fdf2e9; border: 1px solid #e67e22; }
         .select-mini { background: #f0f8ff; border: 1px solid #3498db; color: #2c3e50; font-weight: bold; }
-        
         .cost-panel { background: #f8f9fa; border-radius: 12px; padding: 15px; margin-bottom: 20px; }
         .cost-title { text-align: center; font-size: 16px; font-weight: bold; margin-bottom: 15px; color: #2c3e50; }
         .cost-item { display: flex; justify-content: space-between; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px dashed #dcdde1; font-size: 14px; }
@@ -37,22 +49,59 @@
         .summary-box { flex: 1; }
         .summary-label { color: #c0392b; font-weight: bold; font-size: 13px; margin-bottom: 6px; }
         .summary-val { background: #f1c40f; color: #fff; padding: 10px 5px; border-radius: 8px; font-size: 16px; font-weight: bold; box-shadow: 0 2px 5px rgba(241,196,15,0.3); }
+
+        /* 图鉴模块专用 */
+        .filter-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; justify-content: center; }
+        .f-tag { background: #fbe698; color: #d35400; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .f-tag.active { background: #f39c12; color: #fff; box-shadow: 0 2px 6px rgba(243, 156, 18, 0.4); }
+        .crop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 12px; }
+        .crop-card { background: #eaf3fb; border-radius: 12px; padding: 12px 5px; text-align: center; position: relative; cursor: pointer; border: 1px solid #dcdde1; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .crop-card:active { transform: scale(0.95); }
+        .crop-emoji { font-size: 35px; margin: 5px 0; }
+        .crop-name { font-size: 13px; font-weight: bold; color: #2c3e50; }
+        .crop-time-tag { display: inline-block; background: #fff; color: #e67e22; border: 1px solid #f39c12; font-size: 11px; padding: 2px 6px; border-radius: 10px; margin-top: 5px; }
+        .badge-lv { position: absolute; top: -6px; right: -6px; background: #f1c40f; color: #fff; border-radius: 4px; font-size: 11px; padding: 2px 5px; font-weight: bold; border: 1px solid #f39c12; }
+        .badge-hc { position: absolute; top: -6px; left: -6px; background: #f1c40f; color: #c0392b; border-radius: 4px; font-size: 10px; padding: 2px 4px; font-weight: bold; border: 1px solid #f39c12; }
+
+        /* 弹窗样式 */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-box { background: #fff; width: 300px; border-radius: 16px; padding: 20px; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.2); animation: popIn 0.3s ease; }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-close { position: absolute; top: 12px; right: 15px; font-size: 20px; color: #999; cursor: pointer; }
+        .modal-title { text-align: center; font-size: 20px; font-weight: bold; color: #2c3e50; margin-bottom: 15px; }
+        .modal-title-lv { background: #f1c40f; color: #fff; font-size: 14px; padding: 2px 6px; border-radius: 4px; vertical-align: middle; margin-right: 5px; }
+        .modal-img-area { background: linear-gradient(135deg, #a8e6cf 0%, #dcedc1 100%); height: 120px; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 60px; margin-bottom: 20px; box-shadow: inset 0 -10px 20px rgba(0,0,0,0.05); }
+        .modal-info-row { display: flex; justify-content: space-between; background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 8px; font-size: 14px; font-weight: bold; color: #555; }
+        .icon-coin { color: #f39c12; }
+        .icon-xp { color: #9b59b6; }
     </style>
 </head>
 <body>
+
+    <div class="account-bar">
+        <select class="account-select" id="accSelect" onchange="switchAccount()"></select>
+        <button class="acc-btn btn-add" onclick="addAccount()">➕ 新建</button>
+        <button class="acc-btn btn-del" onclick="delAccount()">🗑️ 删除</button>
+    </div>
+    <div class="data-tools">
+        <button class="btn-data" onclick="exportData()">📤 导出存档</button>
+        <button class="btn-data" onclick="importData()">📥 导入存档</button>
+    </div>
 
     <div class="card">
         <div class="tabs">
             <div class="tab active" onclick="switchTab(1)">浇水排班</div>
             <div class="tab" onclick="switchTab(2)">成熟预测</div>
             <div class="tab" onclick="switchTab(3)">升级资料</div>
+            <div class="tab" onclick="switchTab(4)">作物图鉴</div>
+            <div class="tab" onclick="switchTab(5)">培育计算</div>
         </div>
 
         <div id="tab1" class="content active">
             <div class="form-group">
                 <label>作物类型</label>
-                <select id="crop1" onchange="saveData()">
-                    <option value="1">1小时</option>
+                <select id="crop1" onchange="autoSave()">
+                    <option value="1">1小时 (含以下)</option>
                     <option value="8">8小时</option>
                     <option value="16">16小时</option>
                     <option value="32">32小时</option>
@@ -60,17 +109,17 @@
             </div>
             <div class="form-group">
                 <label>种下时间</label>
-                <input type="time" id="plantTime" onchange="saveData()">
+                <input type="time" id="plantTime" onchange="autoSave()">
             </div>
-            <button onclick="calc1()">生成时间表</button>
+            <button class="main-btn" onclick="calc1()">生成时间表</button>
             <div id="res1" class="result" style="display:none;"></div>
         </div>
 
         <div id="tab2" class="content">
             <div class="form-group">
                 <label>作物类型</label>
-                <select id="crop2" onchange="saveData()">
-                    <option value="1">1小时</option>
+                <select id="crop2" onchange="autoSave()">
+                    <option value="1">1小时 (含以下)</option>
                     <option value="8">8小时</option>
                     <option value="16">16小时</option>
                     <option value="32">32小时</option>
@@ -83,14 +132,14 @@
             <div class="form-group" style="display: flex; gap: 10px;">
                 <div style="flex:1;">
                     <label>剩余成熟</label>
-                    <div style="display:flex;gap:5px;"><input type="number" id="remH" placeholder="时" oninput="saveData()"><input type="number" id="remM" placeholder="分" oninput="saveData()"></div>
+                    <div style="display:flex;gap:5px;"><input type="number" id="remH" placeholder="时" oninput="autoSave()"><input type="number" id="remM" placeholder="分" oninput="autoSave()"></div>
                 </div>
                 <div style="flex:1;">
                     <label>水分维持</label>
-                    <div style="display:flex;gap:5px;"><input type="number" id="watH" placeholder="时" oninput="saveData()"><input type="number" id="watM" placeholder="分" oninput="saveData()"></div>
+                    <div style="display:flex;gap:5px;"><input type="number" id="watH" placeholder="时" oninput="autoSave()"><input type="number" id="watM" placeholder="分" oninput="autoSave()"></div>
                 </div>
             </div>
-            <button onclick="calc2()">开始预测</button>
+            <button class="main-btn" onclick="calc2()">开始预测</button>
             <div id="res2" class="result" style="display:none;"></div>
         </div>
 
@@ -98,137 +147,250 @@
             <div class="upgrade-grid">
                 <div class="grid-col">
                     <div class="grid-title">当前状况</div>
-                    <div class="form-group">
-                        <label>农场等级 (1-40)</label>
-                        <input type="number" class="input-mini" id="currLvl" value="6" onchange="triggerLogicUpdate()">
-                    </div>
-                    <div class="form-group">
-                        <label>当前小摊 (0-19)</label>
-                        <input type="number" class="input-mini" id="currStall" value="2" onchange="triggerLogicUpdate()">
-                    </div>
-                    <div class="form-group">
-                        <label>地块数量 (3-23)</label>
-                        <input type="number" class="input-mini" id="currLand" value="6" onchange="triggerLogicUpdate()">
-                    </div>
+                    <div class="form-group"><label>等级 (1-55)</label><input type="number" class="input-mini" id="currLvl" value="40" onchange="triggerLogicUpdate()"></div>
+                    <div class="form-group"><label>小摊 (0-27)</label><input type="number" class="input-mini" id="currStall" value="19" onchange="triggerLogicUpdate()"></div>
+                    <div class="form-group"><label>一级地 (3-24)</label><input type="number" class="input-mini" id="currLand" value="23" onchange="triggerLogicUpdate()"></div>
+                    <div class="form-group"><label style="color:#8e44ad;">二级地 (0-6)</label><input type="number" class="input-mini" style="border-color:#9b59b6; background:#f5eef8;" id="currLand2" value="0" onchange="triggerLogicUpdate()"></div>
                 </div>
-
                 <div class="grid-col">
                     <div class="grid-title">目标规划</div>
-                    <div class="form-group">
-                        <label>升至等级 (2-40)</label>
-                        <input type="number" class="input-mini" style="border-color:#3498db; color:#2980b9;" id="targetLvl" value="7" onchange="triggerLogicUpdate()">
-                    </div>
-                    <div class="form-group">
-                        <label>升至小摊</label>
-                        <select class="select-mini" id="targetStall" onchange="calcUpgrade()"></select>
-                    </div>
-                    <div class="form-group">
-                        <label>开至地块</label>
-                        <select class="select-mini" id="targetLand" onchange="calcUpgrade()"></select>
-                    </div>
+                    <div class="form-group"><label>目标等级</label><input type="number" class="input-mini" style="border-color:#3498db; color:#2980b9;" id="targetLvl" value="45" onchange="triggerLogicUpdate()"></div>
+                    <div class="form-group"><label>目标小摊</label><select class="select-mini" id="targetStall" onchange="calcUpgrade()"></select></div>
+                    <div class="form-group"><label>目标一级地</label><select class="select-mini" id="targetLand" onchange="triggerLogicUpdate()"></select></div>
+                    <div class="form-group"><label style="color:#8e44ad;">目标二级地</label><select class="select-mini" style="border-color:#9b59b6; background:#f5eef8;" id="targetLand2" onchange="calcUpgrade()"></select></div>
                 </div>
             </div>
-
             <div class="cost-panel">
                 <div class="cost-title">升级花费明细</div>
-                <div class="cost-item">
-                    <span>农场升级经验</span>
-                    <span class="val-xp" id="upgReqXp">720</span>
+                <div class="cost-item"><span>农场经验</span><span class="val-xp" id="upgReqXp">0</span></div>
+                <div class="cost-item"><span>农场金币</span><span class="val-coin" id="upgBaseCoin">0</span></div>
+                <div class="cost-item"><span>小摊 金币/经验</span><span><span class="val-coin" id="upgStallCoin">0</span> / <span class="val-xp" id="upgStallXp">0</span></span></div>
+                <div class="cost-item"><span>开地 金币/经验</span><span><span class="val-coin" id="upgLandCoin">0</span> / <span class="val-xp" id="upgLandXp">0</span></span></div>
+            </div>
+            <div class="summary-row">
+                <div class="summary-box"><div class="summary-label">需要金币</div><div class="summary-val" id="upgTotalCoin">0</div></div>
+                <div class="summary-box"><div class="summary-label">获得经验</div><div class="summary-val" id="upgTotalXp">0</div></div>
+            </div>
+        </div>
+
+        <div id="tab4" class="content">
+            <div class="filter-tags">
+                <span class="f-tag active" onclick="renderCrops('all', this)">全部</span>
+                <span class="f-tag" onclick="renderCrops('短时', this)">短时(&le;1h)</span>
+                <span class="f-tag" onclick="renderCrops('8h', this)">8小时</span>
+                <span class="f-tag" onclick="renderCrops('16h', this)">16小时</span>
+                <span class="f-tag" onclick="renderCrops('32h', this)">32小时</span>
+                <span class="f-tag" style="background:#f39c12; color:white" onclick="renderCrops('high', this)">高金币</span>
+            </div>
+            <div class="crop-grid" id="cropGrid"></div>
+        </div>
+
+        <div id="tab5" class="content">
+            <div class="filter-tags" style="margin-bottom:10px;" id="cultFilters">
+                <span class="f-tag active" onclick="filterCultCrop('all', this)">全部</span>
+                <span class="f-tag" onclick="filterCultCrop('短时', this)">短时</span>
+                <span class="f-tag" onclick="filterCultCrop('8h', this)">8小时</span>
+                <span class="f-tag" onclick="filterCultCrop('16h', this)">16小时</span>
+                <span class="f-tag" onclick="filterCultCrop('32h', this)">32小时</span>
+            </div>
+            <div class="form-group">
+                <label>选择作物 (基于上方标签筛选)</label>
+                <select id="cultCrop" onchange="onCultCropChange()"></select>
+            </div>
+            <div class="form-group" style="display:flex; gap:10px;">
+                <div style="flex:1;">
+                    <label>当前培育等级</label>
+                    <input type="number" id="currCultLvl" min="1" value="1" oninput="autoSave()">
                 </div>
-                <div class="cost-item">
-                    <span>农场升级金币</span>
-                    <span class="val-coin" id="upgBaseCoin">2100</span>
-                </div>
-                <div class="cost-item">
-                    <span>小摊金币 / 经验</span>
-                    <span>
-                        <span class="val-coin" id="upgStallCoin">3000</span> / 
-                        <span class="val-xp" id="upgStallXp">360</span>
-                    </span>
-                </div>
-                <div class="cost-item">
-                    <span>开地金币 / 经验</span>
-                    <span>
-                        <span class="val-coin" id="upgLandCoin">0</span> / 
-                        <span class="val-xp" id="upgLandXp">0</span>
-                    </span>
+                <div style="flex:1;">
+                    <label>当前已有培育值</label>
+                    <input type="number" id="currCultVal" min="0" value="0" step="10" oninput="autoSave()">
                 </div>
             </div>
+            <div class="form-group" style="display:flex; gap:10px;">
+                <div style="flex:1;">
+                    <label>目标等级 (该作物最高<span id="maxCultLvlDisplay" style="color:#d35400;font-weight:bold;">10</span>级)</label>
+                    <input type="number" id="targetCultLvl" value="10" oninput="autoSave()">
+                </div>
+                <div style="flex:1;">
+                    <label>你当前有几块地</label>
+                    <input type="number" id="cultPlots" min="1" max="30" value="24" oninput="autoSave()">
+                </div>
+            </div>
+            <button class="main-btn" onclick="calcCultivation()">计算培育进度</button>
+            <div id="res5" class="result" style="display:none;"></div>
+        </div>
 
-            <div class="summary-row">
-                <div class="summary-box">
-                    <div class="summary-label">合计需要金币</div>
-                    <div class="summary-val" id="upgTotalCoin">5100</div>
-                </div>
-                <div class="summary-box">
-                    <div class="summary-label">合计获得经验</div>
-                    <div class="summary-val" id="upgTotalXp">360</div>
-                </div>
+    </div>
+
+    <div class="modal-overlay" id="cropModal" onclick="closeModal(event)">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <div class="modal-close" onclick="closeModal(null, true)">✕</div>
+            <div class="modal-title">
+                <span class="modal-title-lv" id="mdLevel">1</span>
+                <span id="mdName">小麦</span>
+            </div>
+            <div class="modal-img-area" id="mdEmoji">🌾</div>
+            
+            <div class="modal-info-row">
+                <span>购买单价</span>
+                <span><span class="icon-coin">🪙</span> <span id="mdBuy">0</span></span>
+            </div>
+            <div class="modal-info-row">
+                <span>经验产量 / 数量</span>
+                <span><span class="icon-xp">⭐</span> <span id="mdXp">1</span> &nbsp; 🧺 <span id="mdYield">3</span></span>
+            </div>
+            <div class="modal-info-row">
+                <span>1级出售总价格</span>
+                <span><span class="icon-coin">🪙</span> <span id="mdSale">3</span></span>
+            </div>
+            <div class="modal-info-row" style="background:#fff3e0;">
+                <span style="color:#e67e22;">满级所需地块合计</span>
+                <span style="color:#e67e22; font-size:16px; font-weight:bold;">🧺 <span id="mdMaxPlots">0</span> 块</span>
             </div>
         </div>
     </div>
 
 <script>
-    // --- 数据库 ---
-    const baseLvlData = {
-        2: { xp: 5, coin: 12 }, 3: { xp: 36, coin: 50 }, 4: { xp: 60, coin: 100 }, 5: { xp: 100, coin: 150 }, 6: { xp: 360, coin: 480 },
-        7: { xp: 720, coin: 2100 }, 8: { xp: 1100, coin: 5000 }, 9: { xp: 2200, coin: 13000 }, 10: { xp: 3500, coin: 25000 },
-        11: { xp: 5000, coin: 45000 }, 12: { xp: 7500, coin: 86000 }, 13: { xp: 10000, coin: 109000 }, 14: { xp: 12500, coin: 132000 },
-        15: { xp: 15000, coin: 154000 }, 16: { xp: 17500, coin: 179000 }, 17: { xp: 20000, coin: 204000 }, 18: { xp: 23500, coin: 236000 },
-        19: { xp: 27000, coin: 268000 }, 20: { xp: 30500, coin: 303000 }, 21: { xp: 34000, coin: 336000 }, 22: { xp: 37500, coin: 375000 },
-        23: { xp: 42000, coin: 413000 }, 24: { xp: 46500, coin: 452000 }, 25: { xp: 51000, coin: 493000 }, 26: { xp: 55500, coin: 536000 },
-        27: { xp: 60000, coin: 593000 }, 28: { xp: 70000, coin: 675000 }, 29: { xp: 80000, coin: 762000 }, 30: { xp: 90000, coin: 859000 },
-        31: { xp: 100000, coin: 975000 }, 32: { xp: 110000, coin: 1100000 }, 33: { xp: 120000, coin: 1240000 }, 34: { xp: 130000, coin: 1400000 },
-        35: { xp: 140000, coin: 1580000 }, 36: { xp: 160000, coin: 1780000 }, 37: { xp: 180000, coin: 2000000 }, 38: { xp: 200000, coin: 2270000 },
-        39: { xp: 220000, coin: 2550000 }, 40: { xp: 240000, coin: 2820000 }
+    // --- 升级数据库 ---
+    const baseLvlData = { 2:{xp:5,coin:12},3:{xp:36,coin:50},4:{xp:60,coin:100},5:{xp:100,coin:150},6:{xp:360,coin:480},7:{xp:720,coin:2100},8:{xp:1100,coin:5000},9:{xp:2200,coin:13000},10:{xp:3500,coin:25000},11:{xp:5000,coin:45000},12:{xp:7500,coin:86000},13:{xp:10000,coin:109000},14:{xp:12500,coin:132000},15:{xp:15000,coin:154000},16:{xp:17500,coin:179000},17:{xp:20000,coin:204000},18:{xp:23500,coin:236000},19:{xp:27000,coin:268000},20:{xp:30500,coin:303000},21:{xp:34000,coin:336000},22:{xp:37500,coin:375000},23:{xp:42000,coin:413000},24:{xp:46500,coin:452000},25:{xp:51000,coin:493000},26:{xp:55500,coin:536000},27:{xp:60000,coin:593000},28:{xp:70000,coin:675000},29:{xp:80000,coin:762000},30:{xp:90000,coin:859000},31:{xp:100000,coin:975000},32:{xp:110000,coin:1100000},33:{xp:120000,coin:1240000},34:{xp:130000,coin:1400000},35:{xp:140000,coin:1580000},36:{xp:160000,coin:1780000},37:{xp:180000,coin:2000000},38:{xp:200000,coin:2270000},39:{xp:220000,coin:2550000},40:{xp:240000,coin:2820000},41:{xp:260000,coin:3080000},42:{xp:280000,coin:3340000},43:{xp:300000,coin:3600000},44:{xp:320000,coin:3850000},45:{xp:340000,coin:4090000},46:{xp:360000,coin:4320000},47:{xp:380000,coin:4680000},48:{xp:400000,coin:5030000},49:{xp:420000,coin:5320000},50:{xp:440000,coin:5610000},51:{xp:460000,coin:5910000},52:{xp:480000,coin:6380000},53:{xp:500000,coin:6850000},54:{xp:520000,coin:7350000},55:{xp:540000,coin:7840000} };
+    const landData = { 4:{coin:10,xp:20},5:{coin:100,xp:50},6:{coin:1000,xp:160},7:{coin:8000,xp:500},8:{coin:16000,xp:1000},9:{coin:78000,xp:3000},10:{coin:130000,xp:6000},11:{coin:190000,xp:9000},12:{coin:270000,xp:12000},13:{coin:390000,xp:15000},14:{coin:530000,xp:18000},15:{coin:700000,xp:21000},16:{coin:900000,xp:25000},17:{coin:1250000,xp:30000},18:{coin:1750000,xp:37000},19:{coin:2390000,xp:45000},20:{coin:3170000,xp:56000},21:{coin:4100000,xp:67000},22:{coin:5230000,xp:78000},23:{coin:6480000,xp:89000},24:{coin:7660000,xp:100000} };
+    const land2Data = { 1:{coin:8680000,xp:120000},2:{coin:10100000,xp:122000},3:{coin:11460000,xp:133000},4:{coin:13070000,xp:144000},5:{coin:14800000,xp:156000},6:{coin:16800000,xp:168000} };
+    const stallData = { 1:{coin:0,xp:0},2:{coin:1000,xp:150},3:{coin:3000,xp:360},4:{coin:10000,xp:720},5:{coin:54000,xp:1500},6:{coin:112000,xp:3000},7:{coin:178000,xp:4500},8:{coin:256000,xp:7140},9:{coin:344000,xp:9720},10:{coin:443000,xp:12000},11:{coin:562000,xp:15000},12:{coin:693000,xp:18000},13:{coin:861000,xp:22000},14:{coin:1149000,xp:26000},15:{coin:1520000,xp:32000},16:{coin:1977000,xp:40000},17:{coin:2538000,xp:49000},18:{coin:3196000,xp:59000},19:{coin:3998000,xp:70000},20:{coin:4780000,xp:79000},21:{coin:5516000,xp:87000},22:{coin:6194000,xp:93000},23:{coin:6998000,xp:98000},24:{coin:7798000,xp:102000},25:{coin:8604000,xp:107000},26:{coin:9944000,xp:112000},27:{coin:11330000,xp:118000} };
+
+    function getMaxStall(lv) { if(lv<5)return 0; if(lv===5)return 1; if(lv===6)return 2; return Math.min(27, Math.floor((lv-1)/2)); }
+    function getMaxLand(lv) { return lv < 2 ? 3 : Math.min(24, Math.floor(lv/2)+3); }
+    function getMaxLand2(lv) { return lv < 44 ? 0 : Math.floor((lv-42)/2); }
+
+    // --- 图鉴及培育数据库 (新增每级所需培育值pts) ---
+    const cropData = [
+        { name: "小麦", level: 1, time: "30s", buy: 0, xp: 1, yield: 3, sale: 3, hc: false, emoji: "🌾", filter: "短时", pts: [10] },
+        { name: "胡萝卜", level: 2, time: "2min", buy: 1, xp: 6, yield: 5, sale: 10, hc: false, emoji: "🥕", filter: "短时", pts: [10, 20] },
+        { name: "番茄", level: 3, time: "5min", buy: 2, xp: 15, yield: 5, sale: 25, hc: false, emoji: "🍅", filter: "短时", pts: [10, 30] },
+        { name: "蘑菇", level: 5, time: "20min", buy: 11, xp: 60, yield: 10, sale: 140, hc: false, emoji: "🍄", filter: "短时", pts: [10, 10, 20, 20, 20] },
+        { name: "土豆", level: 6, time: "1h", buy: 35, xp: 180, yield: 10, sale: 460, hc: false, emoji: "🥔", filter: "短时", pts: [10, 10, 20, 30, 30] },
+        { name: "玉米", level: 8, time: "8h", buy: 266, xp: 1526, yield: 10, sale: 3420, hc: false, emoji: "🌽", filter: "8h", pts: [10, 10, 10, 20, 20] },
+        { name: "草莓", level: 10, time: "16h", buy: 457, xp: 3139, yield: 20, sale: 5860, hc: false, emoji: "🍓", filter: "16h", pts: [10, 10, 20, 20, 20] },
+        { name: "向日葵", level: 12, time: "1h", buy: 36, xp: 202, yield: 20, sale: 480, hc: false, emoji: "🌻", filter: "短时", pts: [10, 10, 10, 20, 20, 20, 30, 30, 30] },
+        { name: "青椒", level: 14, time: "8h", buy: 274, xp: 1656, yield: 25, sale: 3525, hc: false, emoji: "🫑", filter: "8h", pts: [10, 10, 10, 10, 20, 20, 20, 30, 30] },
+        { name: "大蒜", level: 16, time: "16h", buy: 453, xp: 3398, yield: 30, sale: 6030, hc: false, emoji: "🧄", filter: "16h", pts: [10, 10, 10, 10, 20, 20, 20, 20, 30] },
+        { name: "香蕉", level: 18, time: "16h", buy: 1812, xp: 1, yield: 40, sale: 19320, hc: true, emoji: "🍌", filter: "16h", pts: [10, 10, 10, 10, 20, 20, 20, 20, 30] },
+        { name: "蓝莓", level: 20, time: "32h", buy: 675, xp: 7142, yield: 20, sale: 9000, hc: false, emoji: "🫐", filter: "32h", pts: [10, 10, 10, 10, 10, 20, 20, 20, 20] },
+        { name: "黄瓜", level: 22, time: "1h", buy: 41, xp: 229, yield: 25, sale: 550, hc: false, emoji: "🥒", filter: "短时", pts: [40, 80, 120, 160, 200, 240, 280, 320, 360] },
+        { name: "茄子", level: 24, time: "8h", buy: 308, xp: 1872, yield: 15, sale: 4110, hc: false, emoji: "🍆", filter: "8h", pts: [20, 40, 60, 80, 100, 100, 120, 120, 140] },
+        { name: "南瓜", level: 26, time: "16h", buy: 507, xp: 3830, yield: 10, sale: 7050, hc: false, emoji: "🎃", filter: "16h", pts: [20, 30, 40, 50, 60, 60, 80, 80, 100] },
+        { name: "柚子", level: 28, time: "16h", buy: 2030, xp: 1, yield: 25, sale: 22550, hc: true, emoji: "🍊", filter: "16h", pts: [20, 30, 40, 50, 60, 60, 80, 80, 100] },
+        { name: "卷心菜", level: 30, time: "32h", buy: 756, xp: 8006, yield: 20, sale: 10500, hc: false, emoji: "🥬", filter: "32h", pts: [20, 20, 30, 30, 40, 40, 50, 60, 70] },
+        { name: "白萝卜", level: 32, time: "1h", buy: 48, xp: 256, yield: 10, sale: 670, hc: false, emoji: "⚪", filter: "短时", pts: [200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800] },
+        { name: "葡萄", level: 34, time: "8h", buy: 359, xp: 2088, yield: 30, sale: 4980, hc: false, emoji: "🍇", filter: "8h", pts: [80, 160, 240, 320, 400, 480, 560, 640, 720] },
+        { name: "生菜", level: 36, time: "16h", buy: 590, xp: 4262, yield: 20, sale: 8560, hc: false, emoji: "🥗", filter: "16h", pts: [50, 100, 150, 200, 250, 300, 350, 400, 450] },
+        { name: "西瓜", level: 38, time: "16h", buy: 2362, xp: 1, yield: 20, sale: 27400, hc: true, emoji: "🍉", filter: "16h", pts: [50, 100, 150, 200, 250, 300, 350, 400, 450] },
+        { name: "辣椒", level: 40, time: "32h", buy: 879, xp: 8870, yield: 20, sale: 12760, hc: false, emoji: "🌶️", filter: "32h", pts: [40, 60, 80, 100, 120, 160, 200, 240, 280] },
+        { name: "洋葱", level: 42, time: "1h", buy: 54, xp: 283, yield: 30, sale: 780, hc: false, emoji: "🧅", filter: "短时", pts: [200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800] },
+        { name: "花菜", level: 44, time: "8h", buy: 405, xp: 2304, yield: 15, sale: 5880, hc: false, emoji: "🥦", filter: "8h", pts: [80, 160, 240, 320, 400, 480, 560, 640, 720] },
+        { name: "花生", level: 46, time: "16h", buy: 664, xp: 4694, yield: 50, sale: 10050, hc: false, emoji: "🥜", filter: "16h", pts: [50, 100, 150, 200, 250, 300, 350, 400, 450] },
+        { name: "木瓜", level: 48, time: "16h", buy: 2658, xp: 1, yield: 40, sale: 32240, hc: true, emoji: "🍈", filter: "16h", pts: [50, 100, 150, 200, 250, 300, 350, 400, 450] },
+        { name: "荞麦", level: 50, time: "32h", buy: 990, xp: 9734, yield: 20, sale: 15000, hc: false, emoji: "🌾", filter: "32h", pts: [50, 100, 150, 200, 250, 300, 350, 400, 450] }
+    ];
+
+    // --- 多账号系统基座 ---
+    let appData = { active: "大号", accounts: { "大号": {} } };
+    const inputFields = ['crop1','plantTime','crop2','remH','remM','watH','watM','currLvl','targetLvl','currStall','currLand','currLand2', 'cultCrop', 'currCultLvl', 'currCultVal', 'targetCultLvl', 'cultPlots'];
+
+    window.onload = function() {
+        let savedMulti = localStorage.getItem('multiFarmData');
+        if (savedMulti) {
+            appData = JSON.parse(savedMulti);
+        } else {
+            let oldFlatData = localStorage.getItem('farmData');
+            if (oldFlatData) {
+                appData.accounts["旧版本存档"] = JSON.parse(oldFlatData);
+                appData.active = "旧版本存档";
+            }
+        }
+        renderAccSelect();
+        
+        // 渲染图鉴与培育筛选
+        renderCrops('all');
+        let firstCultTag = document.getElementById('cultFilters').querySelector('.f-tag');
+        filterCultCrop('all', firstCultTag);
+
+        loadCurrentAccount();
+        updateCurrTime();
     };
 
-    const landData = {
-        4: { coin: 10, xp: 20 }, 5: { coin: 100, xp: 50 }, 6: { coin: 1000, xp: 160 }, 7: { coin: 8000, xp: 500 }, 8: { coin: 16000, xp: 1000 },
-        9: { coin: 78000, xp: 3000 }, 10: { coin: 130000, xp: 6000 }, 11: { coin: 190000, xp: 9000 }, 12: { coin: 270000, xp: 12000 },
-        13: { coin: 390000, xp: 15000 }, 14: { coin: 530000, xp: 18000 }, 15: { coin: 700000, xp: 21000 }, 16: { coin: 900000, xp: 25000 },
-        17: { coin: 1250000, xp: 30000 }, 18: { coin: 1750000, xp: 37000 }, 19: { coin: 2390000, xp: 45000 }, 20: { coin: 3170000, xp: 56000 },
-        21: { coin: 4100000, xp: 67000 }, 22: { coin: 5230000, xp: 78000 }, 23: { coin: 0, xp: 0 }
-    };
-
-    const stallData = {
-        1: { coin: 0, xp: 0 }, 2: { coin: 1000, xp: 150 }, 3: { coin: 3000, xp: 360 }, 4: { coin: 10000, xp: 720 }, 5: { coin: 54000, xp: 1500 },
-        6: { coin: 112000, xp: 3000 }, 7: { coin: 178000, xp: 4500 }, 8: { coin: 256000, xp: 7140 }, 9: { coin: 344000, xp: 9720 },
-        10: { coin: 443000, xp: 12000 }, 11: { coin: 562000, xp: 15000 }, 12: { coin: 693000, xp: 18000 }, 13: { coin: 861000, xp: 22000 },
-        14: { coin: 1149000, xp: 26000 }, 15: { coin: 1520000, xp: 32000 }, 16: { coin: 1977000, xp: 40000 }, 17: { coin: 2538000, xp: 49000 },
-        18: { coin: 3196000, xp: 59000 }, 19: { coin: 0, xp: 0 }
-    };
-
-    function getMaxLand(lv) { return lv < 2 ? 3 : Math.min(23, Math.floor(lv / 2) + 3); }
-    function getMaxStall(lv) {
-        if (lv < 5) return 0;
-        if (lv === 5) return 1;
-        if (lv === 6) return 2;
-        return Math.min(19, Math.floor((lv - 1) / 2));
+    function renderAccSelect() {
+        let sel = document.getElementById('accSelect');
+        sel.innerHTML = '';
+        for (let name in appData.accounts) {
+            let opt = document.createElement('option');
+            opt.value = name; opt.innerText = name;
+            if (name === appData.active) opt.selected = true;
+            sel.appendChild(opt);
+        }
+    }
+    function switchAccount() { appData.active = document.getElementById('accSelect').value; loadCurrentAccount(); }
+    function addAccount() {
+        let name = prompt("请输入新账号名称:");
+        if (!name || name.trim() === "") return;
+        if (appData.accounts[name]) return alert("账号名称已存在！");
+        appData.accounts[name] = {}; appData.active = name;
+        renderAccSelect(); loadCurrentAccount(); autoSave();
+    }
+    function delAccount() {
+        if (Object.keys(appData.accounts).length <= 1) return alert("至少保留一个账号！");
+        if (confirm(`确定要删除当前账号【${appData.active}】吗？`)) {
+            delete appData.accounts[appData.active];
+            appData.active = Object.keys(appData.accounts)[0];
+            renderAccSelect(); loadCurrentAccount(); autoSave();
+        }
     }
 
-    // --- 基础运转逻辑 ---
-    window.onload = function() {
-        const saved = JSON.parse(localStorage.getItem('farmData') || '{}');
-        ['crop1','plantTime','crop2','remH','remM','watH','watM','currLvl','targetLvl','currStall','currLand'].forEach(id => {
-            if(saved[id] !== undefined) document.getElementById(id).value = saved[id];
-        });
-        if(saved.res1) { document.getElementById('res1').innerHTML = saved.res1; document.getElementById('res1').style.display = 'block'; }
-        if(saved.res2) { document.getElementById('res2').innerHTML = saved.res2; document.getElementById('res2').style.display = 'block'; }
-        
-        updateCurrTime();
-        triggerLogicUpdate(saved.targetStall, saved.targetLand);
-    };
-
-    function saveData() {
-        let data = {};
-        ['crop1','plantTime','crop2','remH','remM','watH','watM','currLvl','targetLvl','currStall','currLand','targetStall','targetLand'].forEach(id => {
+    function loadCurrentAccount() {
+        let data = appData.accounts[appData.active] || {};
+        inputFields.forEach(id => {
             let el = document.getElementById(id);
-            if(el) data[id] = el.value;
+            if (el) el.value = data[id] !== undefined ? data[id] : (el.defaultValue || '');
         });
+        
+        let res1 = document.getElementById('res1'), res2 = document.getElementById('res2'), res5 = document.getElementById('res5');
+        if (data.res1) { res1.innerHTML = data.res1; res1.style.display = 'block'; } else { res1.style.display = 'none'; }
+        if (data.res2) { res2.innerHTML = data.res2; res2.style.display = 'block'; } else { res2.style.display = 'none'; }
+        if (data.res5) { res5.innerHTML = data.res5; res5.style.display = 'block'; } else { res5.style.display = 'none'; }
+        
+        triggerLogicUpdate(data.targetStall, data.targetLand, data.targetLand2);
+        onCultCropChange();
+    }
+
+    function autoSave() {
+        let data = {};
+        inputFields.forEach(id => { 
+            let el = document.getElementById(id);
+            if (el) data[id] = el.value; 
+        });
+        data.targetStall = document.getElementById('targetStall').value;
+        data.targetLand = document.getElementById('targetLand').value;
+        data.targetLand2 = document.getElementById('targetLand2').value;
         data.res1 = document.getElementById('res1').innerHTML;
         data.res2 = document.getElementById('res2').innerHTML;
-        localStorage.setItem('farmData', JSON.stringify(data));
+        data.res5 = document.getElementById('res5').innerHTML;
+        
+        appData.accounts[appData.active] = data;
+        localStorage.setItem('multiFarmData', JSON.stringify(appData));
+    }
+
+    function exportData() { autoSave(); prompt("复制神秘代码：", btoa(encodeURIComponent(JSON.stringify(appData)))); }
+    function importData() {
+        let code = prompt("粘贴神秘代码：");
+        if (!code) return;
+        try {
+            let parsed = JSON.parse(decodeURIComponent(atob(code)));
+            if(parsed.accounts && parsed.active) {
+                appData = parsed; renderAccSelect(); loadCurrentAccount();
+                localStorage.setItem('multiFarmData', JSON.stringify(appData));
+                alert("🎉 存档导入成功！");
+            } else throw new Error();
+        } catch(e) { alert("❌ 导入失败！"); }
     }
 
     function switchTab(n) {
@@ -242,149 +404,217 @@
     function formatM(m) { return Math.round(m) + "分钟"; }
     function formatNum(num) { return num >= 10000 ? parseFloat((num / 10000).toFixed(2)) + 'w' : num; }
 
-    // --- 功能一：浇水排班计算逻辑 ---
     function calc1() {
         let baseMins = document.getElementById('crop1').value * 60;
         let pTime = document.getElementById('plantTime').value;
         if(!pTime) return alert("请选择种下时间");
-        let maxMoisture = baseMins / 3;
-        let minWait = maxMoisture / 10;
-        let rem = baseMins;
-        let cur = pTime;
-        let log = `<b>浇水排班表：</b>\n`;
-        rem -= (maxMoisture/4);
-        log += `1. 初始浇水：${cur} (减免 ${maxMoisture/4}分)\n`;
+        let maxM = baseMins / 3, minWait = maxM / 10, rem = baseMins, cur = pTime, log = `<b>浇水排班表：</b>\n`;
+        rem -= (maxM/4); log += `1. 初始浇水：${cur} (减免 ${maxM/4}分)\n`;
         let i = 2;
         while(rem > 0.5) {
-            if(rem > 1.25 * maxMoisture) {
-                cur = addMins(cur, maxMoisture);
-                rem -= 1.25 * maxMoisture;
-                log += `${i}. 再次浇水：${cur} (等待${formatM(maxMoisture)}，减免${maxMoisture/4}分)\n`;
-            } else {
+            if(rem > 1.25 * maxM) { cur = addMins(cur, maxM); rem -= 1.25 * maxM; log += `${i}. 再次浇水：${cur} (等${formatM(maxM)}，减${maxM/4}分)\n`; } 
+            else {
                 let idealW = rem / 1.25;
-                if(idealW >= minWait) {
-                    cur = addMins(cur, idealW);
-                    log += `🏁 最终成熟：<span class="time-badge">${cur}</span> (等待${formatM(idealW)}，浇水后刚好成熟)\n`;
-                } else {
-                    let finalWait = Math.min(rem, minWait);
-                    cur = addMins(cur, finalWait);
-                    if(rem <= minWait) {
-                        log += `🏁 最终成熟：<span class="time-badge">${cur}</span> (等待${formatM(finalWait)}自然成熟，流失未达下限无需浇水)\n`;
-                    } else {
-                        log += `🏁 最终成熟：<span class="time-badge">${cur}</span> (死等${formatM(finalWait)}触发1/10流失下限，浇水瞬间成熟)\n`;
-                    }
+                if(idealW >= minWait) { cur = addMins(cur, idealW); log += `🏁 最终成熟：<span class="time-badge">${cur}</span> (浇水后熟)\n`; } 
+                else {
+                    let finalWait = Math.min(rem, minWait); cur = addMins(cur, finalWait);
+                    if(rem <= minWait) log += `🏁 最终成熟：<span class="time-badge">${cur}</span> (自然熟)\n`;
+                    else log += `🏁 最终成熟：<span class="time-badge">${cur}</span> (卡秒浇水熟)\n`;
                 }
                 break;
             }
             i++;
         }
-        document.getElementById('res1').innerHTML = log;
-        document.getElementById('res1').style.display = 'block';
-        saveData();
+        document.getElementById('res1').innerHTML = log; document.getElementById('res1').style.display = 'block'; autoSave();
     }
 
-    // --- 功能二：成熟预测计算逻辑 ---
     function calc2() {
         updateCurrTime();
         let baseMins = document.getElementById('crop2').value * 60;
         let remTotal = (Number(document.getElementById('remH').value)||0)*60 + (Number(document.getElementById('remM').value)||0);
         let watLeft = (Number(document.getElementById('watH').value)||0)*60 + (Number(document.getElementById('watM').value)||0);
-        let maxM = baseMins / 3;
-        let minWait = maxM / 10;
-        let lost = maxM - watLeft;
-        let idealW = (remTotal - lost / 4) / 1.25;
-        let realWait;
-        let canWaterNow = lost >= minWait;
-        let immReduct = canWaterNow ? (lost / 4) : 0;
-        if (idealW >= minWait - lost) { realWait = idealW; } 
-        else { realWait = Math.min(remTotal, minWait - lost); }
+        let maxM = baseMins / 3, minWait = maxM / 10, lost = maxM - watLeft;
+        let idealW = (remTotal - lost / 4) / 1.25, realWait, canWater = lost >= minWait;
+        if (idealW >= minWait - lost) realWait = idealW; else realWait = Math.min(remTotal, minWait - lost);
         let final = addMins(document.getElementById('currTime').value, realWait);
-        let log = `<b>预测结果：</b>\n`;
-        if(canWaterNow) { log += `✅ 当前流失已超1/10，立刻浇水可减免：${Math.round(immReduct)} 分钟\n`; } 
-        else { log += `⚠️ 当前水分流失未达1/10，无法立即浇水\n`; }
-        log += `后续需现实等待：${Math.round(realWait)} 分钟\n`;
-        log += `最快成熟时刻：<span class="time-badge">${final}</span>`;
-        document.getElementById('res2').innerHTML = log;
-        document.getElementById('res2').style.display = 'block';
-        saveData();
+        let log = `<b>预测结果：</b>\n` + (canWater ? `✅ 流失已超1/10，立即补水减免：${Math.round(lost/4)} 分钟\n` : `⚠️ 流失未达1/10，无法立即浇水\n`) + `后续需现实等待：${Math.round(realWait)} 分钟\n最快成熟时刻：<span class="time-badge">${final}</span>`;
+        document.getElementById('res2').innerHTML = log; document.getElementById('res2').style.display = 'block'; autoSave();
     }
 
-    // --- 功能三：升级逻辑控制 ---
-    function triggerLogicUpdate(savedTargetStall, savedTargetLand) {
-        let cLvl = Math.max(1, Math.min(40, parseInt(document.getElementById('currLvl').value) || 1));
-        let tLvl = Math.max(cLvl, Math.min(40, parseInt(document.getElementById('targetLvl').value) || 2));
+    function triggerLogicUpdate(sStall, sLand, sLand2) {
+        let cLvl = Math.max(1, Math.min(55, parseInt(document.getElementById('currLvl').value) || 1));
+        let tLvl = Math.max(cLvl, Math.min(55, parseInt(document.getElementById('targetLvl').value) || 2));
+        let cStall = Math.max(0, Math.min(getMaxStall(cLvl), parseInt(document.getElementById('currStall').value) || 0));
+        let cLand = Math.max(3, Math.min(getMaxLand(cLvl), parseInt(document.getElementById('currLand').value) || 3));
+        let maxCLand2 = (cLand === 24 && cLvl >= 44) ? getMaxLand2(cLvl) : 0;
+        let cLand2 = Math.max(0, Math.min(maxCLand2, parseInt(document.getElementById('currLand2').value) || 0));
+
+        document.getElementById('currLvl').value = cLvl; document.getElementById('targetLvl').value = tLvl;
+        document.getElementById('currStall').value = cStall; document.getElementById('currLand').value = cLand; document.getElementById('currLand2').value = cLand2;
+
+        let maxTStall = getMaxStall(tLvl), maxTLand = getMaxLand(tLvl);
+        let sEl = document.getElementById('targetStall'), lEl = document.getElementById('targetLand'), l2El = document.getElementById('targetLand2');
+        let curST = sStall || sEl.value, curLT = sLand || lEl.value, curL2T = sLand2 || l2El.value;
         
-        let maxCStall = getMaxStall(cLvl);
-        let cStall = Math.max(0, Math.min(maxCStall, parseInt(document.getElementById('currStall').value) || 0));
-        
-        let maxCLand = getMaxLand(cLvl);
-        let cLand = Math.max(3, Math.min(maxCLand, parseInt(document.getElementById('currLand').value) || 3));
+        let sHTML = `<option value="auto">Auto (升至${maxTStall})</option>`;
+        for(let i=cStall; i<=maxTStall; i++) sHTML += `<option value="${i}">升至 ${i} 级</option>`;
+        sEl.innerHTML = sHTML; if(curST && sEl.querySelector(`option[value="${curST}"]`)) sEl.value = curST;
 
-        document.getElementById('currLvl').value = cLvl;
-        document.getElementById('targetLvl').value = tLvl;
-        document.getElementById('currStall').value = cStall;
-        document.getElementById('currLand').value = cLand;
+        let lHTML = `<option value="auto">Auto (开至${maxTLand})</option>`;
+        for(let i=cLand; i<=maxTLand; i++) lHTML += `<option value="${i}">开至 ${i} 块</option>`;
+        lEl.innerHTML = lHTML; if(curLT && lEl.querySelector(`option[value="${curLT}"]`)) lEl.value = curLT;
 
-        let maxTStall = getMaxStall(tLvl);
-        let maxTLand = getMaxLand(tLvl);
+        let actLT = lEl.value === 'auto' ? maxTLand : parseInt(lEl.value);
+        let maxTLand2 = (actLT === 24 && tLvl >= 44) ? getMaxLand2(tLvl) : 0;
 
-        let stallHTML = `<option value="auto">Auto (随等级升至${maxTStall})</option>`;
-        for(let i = cStall; i <= maxTStall; i++) { stallHTML += `<option value="${i}">升至 ${i} 级${i===cStall?' (不升)':''}</option>`; }
-        document.getElementById('targetStall').innerHTML = stallHTML;
-
-        let landHTML = `<option value="auto">Auto (随等级开至${maxTLand})</option>`;
-        for(let i = cLand; i <= maxTLand; i++) { landHTML += `<option value="${i}">开至 ${i} 块${i===cLand?' (不开)':''}</option>`; }
-        document.getElementById('targetLand').innerHTML = landHTML;
-
-        if (savedTargetStall) document.getElementById('targetStall').value = savedTargetStall;
-        if (savedTargetLand) document.getElementById('targetLand').value = savedTargetLand;
-
+        if (maxTLand2 === 0) {
+            l2El.innerHTML = `<option value="0">需一级地满且达44级</option>`; l2El.value = "0"; l2El.style.color = "#999";
+        } else {
+            let l2HTML = `<option value="auto">Auto (开至${maxTLand2})</option>`;
+            for(let i=cLand2; i<=maxTLand2; i++) l2HTML += `<option value="${i}">开至 ${i} 块</option>`;
+            l2El.innerHTML = l2HTML; l2El.style.color = "#2c3e50";
+            if(curL2T && l2El.querySelector(`option[value="${curL2T}"]`)) l2El.value = curL2T;
+        }
         calcUpgrade();
     }
 
     function calcUpgrade() {
-        saveData(); 
-
-        let cLvl = parseInt(document.getElementById('currLvl').value);
-        let tLvl = parseInt(document.getElementById('targetLvl').value);
-        let cStall = parseInt(document.getElementById('currStall').value);
-        let cLand = parseInt(document.getElementById('currLand').value);
-
-        let selStall = document.getElementById('targetStall').value;
-        let tStall = selStall === 'auto' ? getMaxStall(tLvl) : parseInt(selStall);
-
-        let selLand = document.getElementById('targetLand').value;
-        let tLand = selLand === 'auto' ? getMaxLand(tLvl) : parseInt(selLand);
+        let cLvl = parseInt(document.getElementById('currLvl').value), tLvl = parseInt(document.getElementById('targetLvl').value);
+        let cStall = parseInt(document.getElementById('currStall').value), tStall = document.getElementById('targetStall').value === 'auto' ? getMaxStall(tLvl) : parseInt(document.getElementById('targetStall').value);
+        let cLand = parseInt(document.getElementById('currLand').value), tLand = document.getElementById('targetLand').value === 'auto' ? getMaxLand(tLvl) : parseInt(document.getElementById('targetLand').value);
+        let cLand2 = parseInt(document.getElementById('currLand2').value), tLand2 = document.getElementById('targetLand2').value === 'auto' ? ((tLand === 24 && tLvl >= 44) ? getMaxLand2(tLvl) : 0) : parseInt(document.getElementById('targetLand2').value);
 
         let s_reqXp = 0, s_baseCoin = 0, s_stallCoin = 0, s_stallXp = 0, s_landCoin = 0, s_landXp = 0;
+        for(let i=cLvl+1; i<=tLvl; i++){ let d = baseLvlData[i] || {xp:0,coin:0}; s_reqXp += d.xp; s_baseCoin += d.coin; }
+        for(let i=cStall+1; i<=tStall; i++){ let d = stallData[i] || {xp:0,coin:0}; s_stallXp += d.xp; s_stallCoin += d.coin; }
+        for(let i=cLand+1; i<=tLand; i++){ let d = landData[i] || {xp:0,coin:0}; s_landXp += d.xp; s_landCoin += d.coin; }
+        for(let i=cLand2+1; i<=tLand2; i++){ let d = land2Data[i] || {xp:0,coin:0}; s_landXp += d.xp; s_landCoin += d.coin; }
 
-        for(let i = cLvl + 1; i <= tLvl; i++) {
-            let d = baseLvlData[i] || { xp: 0, coin: 0 };
-            s_reqXp += d.xp;
-            s_baseCoin += d.coin;
+        document.getElementById('upgReqXp').innerText = formatNum(s_reqXp); document.getElementById('upgBaseCoin').innerText = formatNum(s_baseCoin);
+        document.getElementById('upgStallCoin').innerText = formatNum(s_stallCoin); document.getElementById('upgStallXp').innerText = formatNum(s_stallXp);
+        document.getElementById('upgLandCoin').innerText = formatNum(s_landCoin); document.getElementById('upgLandXp').innerText = formatNum(s_landXp);
+        document.getElementById('upgTotalCoin').innerText = formatNum(s_baseCoin + s_stallCoin + s_landCoin); document.getElementById('upgTotalXp').innerText = formatNum(s_stallXp + s_landXp);
+        autoSave();
+    }
+
+    // ========= 功能四：图鉴 =========
+    function renderCrops(filterType, btnEl) {
+        if(btnEl) {
+            btnEl.parentElement.querySelectorAll('.f-tag').forEach(el => el.classList.remove('active'));
+            btnEl.classList.add('active');
+        }
+        let grid = document.getElementById('cropGrid');
+        grid.innerHTML = '';
+        cropData.forEach((crop, index) => {
+            if(filterType !== 'all') {
+                if(filterType === 'high' && !crop.hc) return;
+                if(filterType !== 'high' && crop.filter !== filterType) return;
+            }
+            let card = document.createElement('div');
+            card.className = 'crop-card';
+            card.onclick = () => openModal(index);
+            let hcHtml = crop.hc ? `<div class="badge-hc">高金币</div>` : '';
+            card.innerHTML = `${hcHtml}<div class="badge-lv">${crop.level}</div><div class="crop-emoji">${crop.emoji}</div><div class="crop-name">${crop.name}</div><div class="crop-time-tag">🕑 ${crop.time}</div>`;
+            grid.appendChild(card);
+        });
+    }
+
+    function openModal(index) {
+        let c = cropData[index];
+        document.getElementById('mdLevel').innerText = c.level;
+        document.getElementById('mdName').innerText = c.name;
+        document.getElementById('mdEmoji').innerText = c.emoji;
+        document.getElementById('mdBuy').innerText = c.buy;
+        document.getElementById('mdXp').innerText = c.xp;
+        document.getElementById('mdYield').innerText = c.yield;
+        document.getElementById('mdSale').innerText = c.sale;
+        
+        let totalPts = c.pts.reduce((sum, val) => sum + val, 0);
+        document.getElementById('mdMaxPlots').innerText = Math.ceil(totalPts / 10);
+
+        document.getElementById('cropModal').style.display = 'flex';
+    }
+    function closeModal(e, force = false) { if(force || e.target.id === 'cropModal') document.getElementById('cropModal').style.display = 'none'; }
+
+    // ========= 功能五：培育计算 =========
+    function filterCultCrop(filterType, btnEl) {
+        if(btnEl) {
+            btnEl.parentElement.querySelectorAll('.f-tag').forEach(el => el.classList.remove('active'));
+            btnEl.classList.add('active');
+        }
+        let sel = document.getElementById('cultCrop');
+        let currentVal = sel.value;
+        sel.innerHTML = '';
+        cropData.forEach((crop, index) => {
+            if(filterType === 'all' || crop.filter === filterType) {
+                let opt = document.createElement('option');
+                opt.value = index;
+                opt.innerText = `[${crop.time}] ${crop.name}`;
+                sel.appendChild(opt);
+            }
+        });
+        if (sel.querySelector(`option[value="${currentVal}"]`)) sel.value = currentVal;
+        onCultCropChange();
+    }
+
+    function onCultCropChange() {
+        let idx = document.getElementById('cultCrop').value;
+        if(idx === "") return;
+        let crop = cropData[idx];
+        let maxLvl = crop.pts.length + 1;
+        document.getElementById('maxCultLvlDisplay').innerText = maxLvl;
+        
+        let tLvlEl = document.getElementById('targetCultLvl');
+        if (parseInt(tLvlEl.value) > maxLvl) tLvlEl.value = maxLvl;
+        autoSave();
+    }
+
+    function calcCultivation() {
+        let idx = document.getElementById('cultCrop').value;
+        if(!idx) return alert("请选择作物");
+        let crop = cropData[idx], pts = crop.pts, maxLvl = pts.length + 1;
+        let cLvl = parseInt(document.getElementById('currCultLvl').value) || 1;
+        let cVal = parseInt(document.getElementById('currCultVal').value) || 0;
+        let tLvl = parseInt(document.getElementById('targetCultLvl').value) || maxLvl;
+        let plots = parseInt(document.getElementById('cultPlots').value) || 1;
+
+        if (cLvl < 1) cLvl = 1; if (cLvl > maxLvl) cLvl = maxLvl;
+        if (tLvl < cLvl) tLvl = cLvl; if (tLvl > maxLvl) tLvl = maxLvl;
+
+        document.getElementById('currCultLvl').value = cLvl;
+        document.getElementById('targetCultLvl').value = tLvl;
+
+        let resBox = document.getElementById('res5');
+        if (cLvl === tLvl) {
+            resBox.innerHTML = `<b>【${crop.name}】培育结果：</b>\n已达到或超过目标等级，无需继续培育！`;
+            resBox.style.display = 'block'; autoSave(); return;
         }
 
-        for(let i = cStall + 1; i <= tStall; i++) {
-            let d = stallData[i] || { xp: 0, coin: 0 };
-            s_stallXp += d.xp;
-            s_stallCoin += d.coin;
-        }
+        let neededPts = 0;
+        let currentLevelMaxPts = pts[cLvl - 1];
+        if (cVal >= currentLevelMaxPts) cVal = currentLevelMaxPts - 1; 
+        
+        neededPts += (currentLevelMaxPts - cVal);
+        for (let i = cLvl; i < tLvl - 1; i++) neededPts += pts[i];
 
-        for(let i = cLand + 1; i <= tLand; i++) {
-            let d = landData[i] || { xp: 0, coin: 0 };
-            s_landXp += d.xp;
-            s_landCoin += d.coin;
-        }
+        let neededPlots = Math.ceil(neededPts / 10);
+        let rounds = neededPlots / plots;
+        
+        let fullRounds = Math.floor(rounds);
+        let remPlots = neededPlots % plots;
+        let roundStr = fullRounds + " 轮";
+        if (remPlots > 0) roundStr += ` 零 ${remPlots} 块`;
 
-        document.getElementById('upgReqXp').innerText = formatNum(s_reqXp);
-        document.getElementById('upgBaseCoin').innerText = formatNum(s_baseCoin);
-        document.getElementById('upgStallCoin').innerText = formatNum(s_stallCoin);
-        document.getElementById('upgStallXp').innerText = formatNum(s_stallXp);
-        document.getElementById('upgLandCoin').innerText = formatNum(s_landCoin);
-        document.getElementById('upgLandXp').innerText = formatNum(s_landXp);
-
-        document.getElementById('upgTotalCoin').innerText = formatNum(s_baseCoin + s_stallCoin + s_landCoin);
-        document.getElementById('upgTotalXp').innerText = formatNum(s_stallXp + s_landXp);
+        let log = `<b>【${crop.name}】培育进度计算：</b>\n`;
+        log += `从 Lv.${cLvl} 升至 Lv.${tLvl}：\n`;
+        log += `• 还需培育值：<span style="color:#e67e22;font-weight:bold;">${neededPts}</span> 点\n`;
+        log += `• 折合种地块：<span style="color:#e67e22;font-weight:bold;">${neededPlots}</span> 块\n`;
+        log += `• 按照每次种满 ${plots} 块地，大约需要：\n`;
+        log += `<span style="font-size:18px; color:#c0392b; font-weight:bold;">👉 ${roundStr}</span> (约 ${rounds.toFixed(1)} 轮)`;
+        
+        resBox.innerHTML = log;
+        resBox.style.display = 'block';
+        autoSave();
     }
 </script>
 </body>
